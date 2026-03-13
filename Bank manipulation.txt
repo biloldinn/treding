@@ -1,0 +1,276 @@
+//@version=5
+indicator("Bank Strategy v2", shorttitle="Bank Strategy v2", overlay=true, max_bars_back=100)
+
+//==============================================================================
+// DESCRIPTION
+//==============================================================================
+// Multi-Signal Confirmation Strategy
+// 
+// This indicator uses multiple technical analysis confirmations to generate
+// buy and sell signals. It combines trend analysis, liquidity detection,
+// manipulation patterns, order blocks, imbalances, and volume analysis.
+//
+// Features:
+// - Customizable confirmation requirements (2-5 signals)
+// - Multiple moving average types (SMA, EMA, WMA, RMA)
+// - Liquidity level detection and manipulation analysis
+// - Order block and imbalance identification
+// - Volume spike detection
+// - Entry level calculation with automatic timeout
+//
+// Usage:
+// - Adjust "Minimum Confirmations" to filter signal quality
+// - Enable/disable visual elements as needed
+// - Use in conjunction with proper risk management
+//
+// Educational Purpose: This indicator is for educational and informational
+// purposes only. It should not be used as the sole basis for trading decisions.
+// Always conduct your own analysis and consider risk management.
+
+//==============================================================================
+// INPUT SETTINGS
+//==============================================================================
+// Signal Configuration
+signalGroup = "Signal Configuration"
+min_confirmations = input.int(3, "Minimum Confirmations Required", minval=2, maxval=5, group=signalGroup, tooltip="Number of confirmations needed for signal generation")
+show_details = input.bool(true, "Show Status Table", group=signalGroup, tooltip="Display detailed status information")
+
+// Visual Display Options
+visualGroup = "Visual Display"
+show_liquidity = input.bool(true, "Show Liquidity Levels", group=visualGroup, tooltip="Display swing high/low liquidity levels")
+show_manipulation = input.bool(true, "Show Manipulation Zones", group=visualGroup, tooltip="Highlight potential manipulation candles")
+show_ma_line = input.bool(false, "Show Moving Average Line", group=visualGroup, tooltip="Display the moving average on chart")
+
+// Moving Average Configuration
+maGroup = "Moving Average Settings"
+ma_length = input.int(200, "MA Period", minval=1, maxval=500, group=maGroup, tooltip="Moving average calculation period")
+ma_type = input.string("SMA", "MA Type", options=["SMA", "EMA", "WMA", "RMA"], group=maGroup, tooltip="Type of moving average calculation")
+
+//==============================================================================
+// TECHNICAL ANALYSIS COMPONENTS
+//==============================================================================
+
+// Moving Average Calculation
+get_ma(source, length, ma_type) =>
+    switch ma_type
+        "SMA" => ta.sma(source, length)
+        "EMA" => ta.ema(source, length)
+        "WMA" => ta.wma(source, length)
+        "RMA" => ta.rma(source, length)
+        => ta.sma(source, length)
+
+// Trend Analysis
+moving_average = get_ma(close, ma_length, ma_type)
+bullish_trend = close > moving_average
+bearish_trend = close < moving_average
+
+// Liquidity Level Detection
+pivot_high = ta.pivothigh(high, 5, 5)
+pivot_low = ta.pivotlow(low, 5, 5)
+
+var float resistance_level = na
+var float support_level = na
+
+if not na(pivot_high)
+    resistance_level := high[5]
+if not na(pivot_low)
+    support_level := low[5]
+
+// Liquidity Hunt Detection
+resistance_hunt = not na(resistance_level) and high > resistance_level and close < resistance_level
+support_hunt = not na(support_level) and low < support_level and close > support_level
+
+// Manipulation Pattern Detection (False Move)
+false_move_up = high > high[1] and close < low[1]
+false_move_down = low < low[1] and close > high[1]
+
+// Order Block Patterns
+bullish_engulfing = close > open and close > high[1] and open < close[1]
+bearish_engulfing = close < open and close < low[1] and open > close[1]
+
+// Gap/Imbalance Detection
+bullish_gap = low > high[1]
+bearish_gap = high < low[1]
+
+// Volume Analysis
+average_volume = ta.sma(volume, 20)
+volume_spike = volume > average_volume * 1.5
+
+//==============================================================================
+// SIGNAL CONFIRMATION SYSTEM
+//==============================================================================
+
+// Bullish Confirmation Counter
+bullish_signals = 0
+if bullish_trend
+    bullish_signals += 1
+if support_hunt
+    bullish_signals += 1
+if false_move_down
+    bullish_signals += 1
+if bullish_engulfing
+    bullish_signals += 1
+if bullish_gap
+    bullish_signals += 1
+if volume_spike
+    bullish_signals += 1
+
+// Bearish Confirmation Counter
+bearish_signals = 0
+if bearish_trend
+    bearish_signals += 1
+if resistance_hunt
+    bearish_signals += 1
+if false_move_up
+    bearish_signals += 1
+if bearish_engulfing
+    bearish_signals += 1
+if bearish_gap
+    bearish_signals += 1
+if volume_spike
+    bearish_signals += 1
+
+// Signal Generation
+buy_confirmed = bullish_signals >= min_confirmations
+sell_confirmed = bearish_signals >= min_confirmations
+
+//==============================================================================
+// ENTRY LEVEL MANAGEMENT
+//==============================================================================
+
+var float buy_entry_price = na
+var float sell_entry_price = na
+var bool awaiting_buy_entry = false
+var bool awaiting_sell_entry = false
+
+// Entry Level Calculation
+if buy_confirmed and not awaiting_buy_entry
+    buy_entry_price := low + (high - low) * 0.25
+    awaiting_buy_entry := true
+
+if sell_confirmed and not awaiting_sell_entry
+    sell_entry_price := high - (high - low) * 0.25
+    awaiting_sell_entry := true
+
+// Entry Execution Detection
+buy_entry_triggered = awaiting_buy_entry and high >= buy_entry_price
+sell_entry_triggered = awaiting_sell_entry and low <= sell_entry_price
+
+// Reset Entry Conditions
+if buy_entry_triggered
+    awaiting_buy_entry := false
+if sell_entry_triggered
+    awaiting_sell_entry := false
+
+// Timeout Management (10 bars)
+var int buy_signal_bar = 0
+var int sell_signal_bar = 0
+
+if buy_confirmed
+    buy_signal_bar := bar_index
+if sell_confirmed
+    sell_signal_bar := bar_index
+
+if awaiting_buy_entry and (bar_index - buy_signal_bar) > 10
+    awaiting_buy_entry := false
+if awaiting_sell_entry and (bar_index - sell_signal_bar) > 10
+    awaiting_sell_entry := false
+
+//==============================================================================
+// CHART VISUALIZATION
+//==============================================================================
+
+// Moving Average Display
+plot(show_ma_line ? moving_average : na, "Moving Average", 
+     color=bullish_trend ? color.new(color.green, 0) : color.new(color.red, 0), 
+     linewidth=2)
+
+// Liquidity Level Visualization
+if show_liquidity and not na(resistance_level)
+    line.new(bar_index - 10, resistance_level, bar_index + 5, resistance_level, 
+             color=color.new(color.red, 0), style=line.style_dashed, width=1)
+
+if show_liquidity and not na(support_level)
+    line.new(bar_index - 10, support_level, bar_index + 5, support_level, 
+             color=color.new(color.aqua, 0), style=line.style_dashed, width=1)
+
+// Manipulation Zone Highlighting
+if show_manipulation and false_move_up
+    box.new(bar_index, low, bar_index + 3, high, bgcolor=color.new(color.orange, 80), border_color=color.orange)
+    label.new(bar_index, high, "FM", color=color.orange, textcolor=color.white, style=label.style_label_down, size=size.tiny)
+
+if show_manipulation and false_move_down
+    box.new(bar_index, low, bar_index + 3, high,  bgcolor=color.new(color.purple, 80), border_color=color.purple)
+    label.new(bar_index, low, "FM", color=color.purple, textcolor=color.white,  style=label.style_label_up, size=size.tiny)
+
+//==============================================================================
+// SIGNAL DISPLAY
+//==============================================================================
+
+// Primary Signals
+plotshape(buy_confirmed, title="Buy Signal", location=location.belowbar, 
+          color=color.new(color.lime, 0), style=shape.triangleup, size=size.large, text="BUY")
+
+plotshape(sell_confirmed, title="Sell Signal", location=location.abovebar, 
+          color=color.new(color.red, 0), style=shape.triangledown, size=size.large, text="SELL")
+
+// Entry Level Lines
+plot(awaiting_buy_entry ? buy_entry_price : na, "Buy Entry Level", 
+     color=color.new(color.yellow, 0), linewidth=2, style=plot.style_line)
+
+plot(awaiting_sell_entry ? sell_entry_price : na, "Sell Entry Level", 
+     color=color.new(color.yellow, 0), linewidth=2, style=plot.style_line)
+
+// Entry Confirmation Markers
+plotshape(buy_entry_triggered, title="Buy Entry Filled", location=location.belowbar, 
+          color=color.new(color.lime, 0), style=shape.labelup, size=size.small, text="ENTRY")
+
+plotshape(sell_entry_triggered, title="Sell Entry Filled", location=location.abovebar, 
+          color=color.new(color.red, 0), style=shape.labeldown, size=size.small, text="ENTRY")
+
+//==============================================================================
+// INFORMATION PANEL
+//==============================================================================
+
+if barstate.islast and show_details
+    var table info_panel = table.new(position.top_right, 2, 6, 
+                                   bgcolor=color.new(color.white, 0), border_width=1)
+    
+    // Header
+    table.cell(info_panel, 0, 0, "MSCS", text_color=color.white, bgcolor=color.blue, text_size=size.normal)
+    table.cell(info_panel, 1, 0, "STATUS", text_color=color.white, bgcolor=color.blue, text_size=size.normal)
+    
+    // Market Trend
+    table.cell(info_panel, 0, 1, "Trend", text_color=color.black, text_size=size.small)
+    table.cell(info_panel, 1, 1, bullish_trend ? "BULLISH" : "BEARISH", 
+               text_color=bullish_trend ? color.green : color.red, text_size=size.small)
+    
+    // Signal Counts
+    table.cell(info_panel, 0, 2, "Bull Signals", text_color=color.black, text_size=size.small)
+    table.cell(info_panel, 1, 2, str.tostring(bullish_signals), text_color=color.green, text_size=size.small)
+    
+    table.cell(info_panel, 0, 3, "Bear Signals", text_color=color.black, text_size=size.small)
+    table.cell(info_panel, 1, 3, str.tostring(bearish_signals), text_color=color.red, text_size=size.small)
+    
+
+    
+    // Position Status
+    table.cell(info_panel, 0, 5, "Awaiting", text_color=color.black, text_size=size.small)
+    position_status = awaiting_buy_entry ? "BUY" : awaiting_sell_entry ? "SELL" : "NONE"
+    position_color = awaiting_buy_entry ? color.green : awaiting_sell_entry ? color.red : color.gray
+    table.cell(info_panel, 1, 5, position_status, text_color=position_color, text_size=size.small)
+
+//==============================================================================
+// ALERT CONDITIONS
+//==============================================================================
+
+alertcondition(buy_confirmed, "Buy Signal Generated", "MSCS: Buy signal with {{plot('0')}} confirmations")
+alertcondition(sell_confirmed, "Sell Signal Generated", "MSCS: Sell signal with {{plot('1')}} confirmations")
+alertcondition(buy_entry_triggered, "Buy Entry Triggered", "MSCS: Buy entry level reached")
+alertcondition(sell_entry_triggered, "Sell Entry Triggered", "MSCS: Sell entry level reached")
+
+//==============================================================================
+// PLOTS FOR ALERT MESSAGES
+//==============================================================================
+plot(bullish_signals, "Bullish Confirmations", display=display.none)
+plot(bearish_signals, "Bearish Confirmations", display=display.none)
