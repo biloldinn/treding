@@ -380,9 +380,10 @@ document.querySelectorAll('.nav-item').forEach(btn => {
 // ===========================
 // TIMEFRAME BUTTONS
 // ===========================
-document.querySelectorAll('.timeframe-btn').forEach(btn => {
+document.querySelectorAll('.tf-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
+        if (navigator.vibrate) navigator.vibrate(50);
+        document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentInterval = btn.dataset.tf;
         fetchCandles();

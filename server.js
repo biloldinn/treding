@@ -14,6 +14,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AIzaSyDn2SUrDcDUjyUKd8OQqlyf6Tzb663FcU0');
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
+const OPENROUTER_API_KEY = "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";
+const OPENROUTER_MODEL = "arcee-ai/trinity-mini:free";
+
 // ===================================================
 // PDF BOOKS LOADER
 // ===================================================
@@ -230,15 +233,35 @@ Ishonch darajasi: [Yuqori/O'rta/Past] - XX%
 // ===================================================
 app.post('/api/chat', async (req, res) => {
     const { message } = req.body;
-    const prompt = `${buildSystemPrompt()}
+    const systemPrompt = buildSystemPrompt();
 
-FOYDALANUVCHI SAVOLI: "${message}"
-
-O'zbek tilida qisqa, professional va aniq javob bering. Kitoblardagi kontseptsiyalardan foydalaning.`;
     try {
-        const result = await model.generateContent(prompt);
-        res.json({ success: true, response: result.response.text() });
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://github.com/biloldinn/treding",
+                "X-Title": "Turon AI Trading"
+            },
+            body: JSON.stringify({
+                model: OPENROUTER_MODEL,
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: `FOYDALANUVCHI SAVOLI: "${message}"\n\nO'zbek tilida qisqa, professional va aniq javob bering. Kitoblardagi kontseptsiyalardan foydalaning.` }
+                ]
+            })
+        });
+
+        const data = await response.json();
+        if (data && data.choices && data.choices.length > 0) {
+            res.json({ success: true, response: data.choices[0].message.content });
+        } else {
+            console.error("OpenRouter Response Error:", data);
+            res.status(500).json({ success: false, error: 'OpenRouter tahlilida xatolik yuz berdi.' });
+        }
     } catch (error) {
+        console.error('Chat xatosi: ', error);
         res.status(500).json({ success: false, error: 'Chat xatosi: ' + error.message });
     }
 });
