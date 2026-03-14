@@ -46,17 +46,16 @@ async function loadPdfBooks() {
         try {
             const filePath = path.join(booksDir, file);
             const buffer = fs.readFileSync(filePath);
-            const data = await pdfParse(buffer, { max: 50 }); // first 50 pages only
+            const data = await pdfParse(buffer); // Barcha sahifalarni o'qish (limisiz)
             const text = data.text
                 .replace(/\s+/g, ' ')
                 .replace(/(.)\1{5,}/g, '$1') // remove repeated chars
-                .trim()
-                .substring(0, 8000); // max 8000 chars per book
+                .trim(); // Hech qanday qisqartirishsiz (to'liq matn)
 
             if (text.length > 100) {
                 texts.push(`\n=== KITOB: "${file}" ===\n${text}\n`);
                 loadedBooks.push(file);
-                console.log(`  ✅ ${file} (${text.length} belgi)`);
+                console.log(`  ✅ ${file} (${text.length} belgi yuklandi)`);
             }
         } catch (err) {
             console.warn(`  ⚠️ ${file} o'qishda xato:`, err.message);
