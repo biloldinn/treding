@@ -356,14 +356,24 @@ function drawCurrentPriceLine(W, y, paddingRight) {
 }
 
 // ===========================
-// TABS
+// NAVIGATION (BOTTOM TABS)
 // ===========================
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Haptic feedback if supported
+        if (navigator.vibrate) navigator.vibrate(50);
+
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.view-section').forEach(c => c.classList.remove('active'));
+
         btn.classList.add('active');
-        document.getElementById(btn.dataset.tab).classList.add('active');
+        document.getElementById(btn.dataset.view).classList.add('active');
+
+        // Redraw chart if switching back to home
+        if (btn.dataset.view === 'viewHome') {
+            setTimeout(resizeCanvas, 50);
+        }
     });
 });
 
@@ -408,15 +418,29 @@ fileInput.addEventListener('change', () => {
     if (fileInput.files[0]) handleFileSelect(fileInput.files[0]);
 });
 
+// Double input for re-selection
+const fileInputReselect = document.getElementById('chartUploadReselect');
+if (fileInputReselect) {
+    fileInputReselect.addEventListener('change', () => {
+        if (fileInputReselect.files[0]) handleFileSelect(fileInputReselect.files[0]);
+    });
+}
+
 function handleFileSelect(file) {
+    if (navigator.vibrate) navigator.vibrate(50);
     const reader = new FileReader();
     reader.onload = (e) => {
         uploadedImageBase64 = e.target.result;
         uploadPreview.src = uploadedImageBase64;
-        uploadPreview.style.display = 'block';
-        uploadHint.style.display = 'none';
+
+        document.getElementById('previewContainer').style.display = 'block';
+        uploadZone.style.display = 'none'; // Hide native upload box
+
         btnAnalyze.disabled = false;
-        showToast('📸 Rasm yuklandi! "AI Tahlil" tugmasini bosing.');
+        showToast('📸 Rasm yuklandi!');
+
+        // Scroll slightly down
+        window.scrollBy({ top: 150, behavior: 'smooth' });
     };
     reader.readAsDataURL(file);
 }
@@ -435,11 +459,11 @@ async function analyzeChart() {
     const pair = document.getElementById('pairInput').value || currentSymbol;
     const timeframe = document.getElementById('tfInput').value || currentInterval;
 
-    // Switch to analysis tab
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelector('[data-tab="tabAnalysis"]').classList.add('active');
-    document.getElementById('tabAnalysis').classList.add('active');
+    // Switch to analysis tab (mobile view)
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.view-section').forEach(c => c.classList.remove('active'));
+    document.querySelector('[data-view="viewAnalysis"]').classList.add('active');
+    document.getElementById('viewAnalysis').classList.add('active');
 
     // Show loading
     analysisOutput.innerHTML = `
@@ -574,12 +598,15 @@ function appendMsg(text, type) {
 // ===========================
 document.querySelectorAll('.knowledge-card').forEach(card => {
     card.addEventListener('click', () => {
+        if (navigator.vibrate) navigator.vibrate(50);
         const topic = card.querySelector('.knowledge-card-title').textContent;
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.querySelector('[data-tab="tabChat"]').classList.add('active');
-        document.getElementById('tabChat').classList.add('active');
-        chatInput.value = topic + ' haqida tushuntir';
+
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.view-section').forEach(c => c.classList.remove('active'));
+        document.querySelector('[data-view="viewChat"]').classList.add('active');
+        document.getElementById('viewChat').classList.add('active');
+
+        chatInput.value = topic + ' nima ekanligini muallif @demond_fx va DFX metodikasi asosida tushuntirib bering.';
         sendChat();
     });
 });

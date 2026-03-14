@@ -3,10 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TuronAI Trading | AI Bozor Tahlili</title>
-    <meta name="description"
-        content="AI bilan professional bozor tahlili. SMC, Wyckoff, Elliott Wave strategiyalari asosida.">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>TuronAI Trading</title>
+    <meta name="description" content="AI bilan professional bozor tahlili. SMC, Wyckoff, Elliott Wave.">
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,244 +18,149 @@
     <header class="header">
         <div class="logo">
             <div class="logo-icon">📈</div>
-            <div>TuronAI <span>Trading</span></div>
+            TuronAI
         </div>
-        <div class="header-controls">
-            <div class="market-badge">
-                <div class="pulse-dot"></div>
-                Real-Time
-            </div>
-            <div class="market-badge" style="color: #ffd700;">
-                🤖 AI Tahlil Tayyor
-            </div>
+        <div class="market-badge" id="booksBadge">
+            ⏳ Yuklanmoqda...
         </div>
     </header>
 
-    <!-- MAIN LAYOUT -->
-    <div class="main-layout">
+    <!-- MAIN CONTENT CONTAINER -->
+    <div class="main-container" id="mainContainer">
 
-        <!-- ===================== LEFT PANEL ===================== -->
-        <div class="left-panel">
+        <!-- ===================== 1. HOME / CHART VIEW ===================== -->
+        <div class="view-section active" id="viewHome">
 
-            <!-- Chart Controls -->
-            <div class="chart-controls">
-                <select id="marketSelect" class="market-select">
-                    <option value="BTCUSDT">BTC/USDT</option>
-                    <option value="ETHUSDT">ETH/USDT</option>
-                    <option value="BNBUSDT">BNB/USDT</option>
-                    <option value="SOLUSDT">SOL/USDT</option>
-                    <option value="XRPUSDT">XRP/USDT</option>
-                    <option value="ADAUSDT">ADA/USDT</option>
-                    <option value="DOGEUSDT">DOGE/USDT</option>
-                    <option value="AVAXUSDT">AVAX/USDT</option>
-                    <option value="DOTUSDT">DOT/USDT</option>
-                    <option value="MATICUSDT">MATIC/USDT</option>
-                    <option value="LINKUSDT">LINK/USDT</option>
-                    <option value="UNIUSDT">UNI/USDT</option>
-                </select>
-
-                <button class="timeframe-btn" data-tf="1m">1m</button>
-                <button class="timeframe-btn" data-tf="5m">5m</button>
-                <button class="timeframe-btn" data-tf="15m">15m</button>
-                <button class="timeframe-btn" data-tf="1h"
-                    style="background:var(--accent-green);color:#000;border-color:var(--accent-green);font-weight:600">1h</button>
-                <button class="timeframe-btn" data-tf="4h">4h</button>
-                <button class="timeframe-btn" data-tf="1d">1D</button>
-                <button class="timeframe-btn" data-tf="1w">1W</button>
-
-                <div class="price-display">
-                    <span id="currentPrice" class="current-price">—</span>
-                    <span id="priceChange" class="price-change up">+0.00%</span>
-                </div>
-            </div>
-
-            <!-- Candlestick Chart -->
-            <div class="chart-wrapper">
-                <canvas id="candleChart"></canvas>
-                <div class="chart-overlay">
-                    <div class="chart-label">EMA (20) - Binance</div>
-                </div>
-            </div>
-
-            <!-- OHLCV Stats -->
-            <div class="mini-stats">
-                <div class="mini-stat">
-                    <div class="mini-stat-label">Ochilish</div>
-                    <div class="mini-stat-val" id="statOpen">—</div>
-                </div>
-                <div class="mini-stat">
-                    <div class="mini-stat-label">Maksimum</div>
-                    <div class="mini-stat-val" id="statHigh" style="color:var(--accent-green)">—</div>
-                </div>
-                <div class="mini-stat">
-                    <div class="mini-stat-label">Minimum</div>
-                    <div class="mini-stat-val" id="statLow" style="color:var(--accent-red)">—</div>
-                </div>
-                <div class="mini-stat">
-                    <div class="mini-stat-label">Hajm</div>
-                    <div class="mini-stat-val" id="statVol" style="color:var(--accent-blue)">—</div>
-                </div>
-            </div>
-
-            <!-- Screenshot Upload & Analyze -->
-            <div class="upload-section">
-                <div class="upload-label">📸 Bozor skrinshotini yuklang → AI tahlil qilsin</div>
-                <div class="upload-zone" id="uploadZone">
-                    <input type="file" id="chartUpload" accept="image/*">
-                    <img id="uploadPreview" class="upload-preview" alt="preview">
-                    <div id="uploadHint" class="upload-hint">
-                        Rasmni shu yerga tashlang yoki <span>tanlang</span><br>
-                        <small style="opacity:0.5; font-size:0.7rem">PNG, JPG, WEBP qabul qilinadi</small>
+            <!-- Chart Card -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="pair-info">
+                        <select id="marketSelect" class="market-select">
+                            <option value="BTCUSDT">BTC/USDT</option>
+                            <option value="ETHUSDT">ETH/USDT</option>
+                            <option value="BNBUSDT">BNB/USDT</option>
+                            <option value="SOLUSDT">SOL/USDT</option>
+                            <option value="XRPUSDT">XRP/USDT</option>
+                            <option value="ADAUSDT">ADA/USDT</option>
+                            <option value="DOGEUSDT">DOGE/USDT</option>
+                        </select>
+                        <div class="price-box">
+                            <div class="current-price" id="currentPrice">—</div>
+                            <div class="price-change up" id="priceChange">+0.00%</div>
+                        </div>
+                    </div>
+                    <div class="timeframes">
+                        <button class="tf-btn" data-tf="1m">1M</button>
+                        <button class="tf-btn" data-tf="5m">5M</button>
+                        <button class="tf-btn" data-tf="15m">15M</button>
+                        <button class="tf-btn active" data-tf="1h">1H</button>
+                        <button class="tf-btn" data-tf="4h">4H</button>
+                        <button class="tf-btn" data-tf="1d">1D</button>
                     </div>
                 </div>
-                <div class="analyze-row">
-                    <input type="text" class="analyze-input" id="pairInput" placeholder="Juftlik (BTC/USDT)">
-                    <input type="text" class="analyze-input" id="tfInput" placeholder="Interval (1h)">
+                <div class="chart-wrapper">
+                    <canvas id="candleChart"></canvas>
                 </div>
-                <button class="btn-analyze" id="btnAnalyze">
-                    🤖 AI Bilan Tahlil Qilish
+            </div>
+
+            <!-- Upload & Analyze Card -->
+            <div class="upload-card">
+                <div class="section-title">✨ AI Tahlil Uchun Rasm Yuklang</div>
+
+                <label class="upload-area" id="uploadZone" for="chartUpload">
+                    <span class="upload-icon">📸</span>
+                    <div class="upload-text">Skrinshotni tanlash</div>
+                    <div class="upload-sub">MT4, MT5 yoki TradingView rasmlari</div>
+                    <input type="file" id="chartUpload" accept="image/*">
+                </label>
+
+                <div class="preview-container" id="previewContainer">
+                    <img id="uploadPreview" src="" alt="Skrinshot">
+                    <!-- Native file input covers the whole image area transparently to allow re-selection -->
+                    <input type="file" id="chartUploadReselect" accept="image/*"
+                        style="opacity:0; position:absolute; inset:0; cursor:pointer;">
+                    <div class="reselect-btn">O'zgartirish</div>
+                </div>
+
+                <div class="input-row">
+                    <input type="text" class="input-field" id="pairInput" placeholder="Juftlik (BTC/USD)">
+                    <input type="text" class="input-field" id="tfInput" placeholder="Interval (H1)">
+                </div>
+
+                <button class="btn-primary" id="btnAnalyze" disabled>
+                    🤖 Tahlil Qilish
                 </button>
+            </div>
+
+            <div id="booksStatus"
+                style="font-size: 0.75rem; color: var(--text-secondary); padding: 0 12px; line-height: 1.5; text-align: center; margin-bottom: 24px;">
+                AI bilimlari tekshirilmoqda...
+            </div>
+
+        </div>
+
+        <!-- ===================== 2. ANALYSIS VIEW ===================== -->
+        <div class="view-section" id="viewAnalysis">
+            <div class="section-title" style="margin-left: 4px; margin-top: 4px; font-size: 1.2rem;">📊 Natija</div>
+            <div class="analysis-output" id="analysisOutput">
+                <div style="text-align: center; color: var(--text-secondary); padding: 40px 0;">
+                    <div style="font-size: 3rem; margin-bottom: 12px;">🔍</div>
+                    Siz hali rasm tahlil qilmadingiz.<br>Bosh sahifadan skrinshot yuklang.
+                </div>
             </div>
         </div>
 
-        <!-- ===================== RIGHT PANEL ===================== -->
-        <div class="right-panel">
-
-            <!-- Tabs -->
-            <div class="panel-tabs">
-                <button class="tab-btn active" data-tab="tabAnalysis">📊 Tahlil</button>
-                <button class="tab-btn" data-tab="tabChat">💬 AI Chat</button>
-                <button class="tab-btn" data-tab="tabSignals">🎯 Signallar</button>
-                <button class="tab-btn" data-tab="tabKnowledge">📚 Bilimlar</button>
-            </div>
-
-            <!-- ---- TAB: ANALYSIS ---- -->
-            <div class="tab-content active" id="tabAnalysis">
-                <div class="analysis-output" id="analysisOutput">
-                    <div class="analysis-placeholder">
-                        <div class="ai-avatar">🤖</div>
-                        <div class="placeholder-title">AI Tahlil Tayyor</div>
-                        <div class="placeholder-desc">
-                            Chap tomondagi bozor skrinshotini yuklang.<br>
-                            AI sizning bozorni SMC, Wyckoff, Elliott Wave va boshqa DFX strategiyalari asosida tahlil
-                            qiladi.
-                        </div>
-                        <div
-                            style="margin-top:12px; display:flex; flex-direction:column; gap:6px; width:100%; text-align:left">
-                            <div
-                                style="background:var(--bg-card); border-radius:8px; padding:8px 12px; font-size:0.75rem; border:1px solid var(--border)">
-                                📚 <strong>Integratsiya qilingan bilimlar:</strong><br>
-                                <span style="color:var(--text-secondary)">SMC, SNR, Wyckoff, FibonAcci,<br>Elliott Wave,
-                                    MO3, Quasimodo,<br>SND, CHOCH, Bozor Strukturasi</span>
-                            </div>
-                            <div
-                                style="background:var(--bg-card); border-radius:8px; padding:8px 12px; font-size:0.75rem; border:1px solid var(--border)">
-                                📁 <strong>Manbalar:</strong> DFX Strategy Series, SMC @demond_fx, Wyckoff, Bank
-                                Manipulation, Simple Trading Book
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ---- TAB: CHAT ---- -->
-            <div class="tab-content" id="tabChat">
+        <!-- ===================== 3. CHAT VIEW ===================== -->
+        <div class="view-section" id="viewChat">
+            <div class="chat-container">
                 <div class="chat-messages" id="chatMessages">
                     <div class="msg ai">
-                        👋 Salom! Men DFX Seriyasi, SMC, Wyckoff, Elliott Wave va boshqa strategiyalarni bilaman.
-                        Istalgan savol bering!
-                    </div>
-                    <div class="msg ai">
-                        Misol savollar:<br>
-                        • "Order block nima?"<br>
-                        • "CHOCH qanday topiladi?"<br>
-                        • "BTC uchun SMC tahlili"
+                        Assalomu alaykum! Men TuronAI man. 📚 SMC, Wyckoff, Elliott Wave strategiyalari bo'yicha
+                        savolingiz bo'lsa bering.
                     </div>
                 </div>
-                <div class="chat-input-area">
-                    <input type="text" class="chat-input" id="chatInput" placeholder="Savol yozing...">
-                    <button class="btn-send" id="btnSendChat">➤</button>
-                </div>
-            </div>
-
-            <!-- ---- TAB: SIGNALS ---- -->
-            <div class="tab-content" id="tabSignals">
-                <div class="signals-list">
-                    <div style="font-size:0.75rem; color:var(--text-secondary); padding:8px 4px; margin-bottom:4px;">
-                        🎯 AI tahlillandirgan signallar bu yerda chiqadi
-                    </div>
-                    <div class="signal-card" id="latestSignalCard">
-                        <div class="signal-card-header">
-                            <span class="signal-pair" style="color:var(--text-secondary)">Hali signal yo'q</span>
-                        </div>
-                        <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:6px;">
-                            Rasm yuklang → AI tahlil qiling → Signal bu yerda paydo bo'ladi
-                        </div>
-                    </div>
-                    <!-- Static Example Signals -->
-                    <div style="font-size:0.72rem; color:var(--text-secondary); padding:8px 4px; margin-top:8px;">Namuna
-                        signallar:</div>
-                    <div class="signal-card">
-                        <div class="signal-card-header">
-                            <span class="signal-pair">BTC/USDT</span>
-                            <span class="signal-dir dir-buy">BUY</span>
-                        </div>
-                        <div class="signal-card-body">
-                            <span>Strategiya:</span><span>SMC + OB</span>
-                            <span>Kirish:</span><span style="color:var(--accent-green)">43,200</span>
-                            <span>SL:</span><span style="color:var(--accent-red)">42,800</span>
-                            <span>TP:</span><span style="color:var(--accent-green)">44,500</span>
-                        </div>
-                    </div>
-                    <div class="signal-card">
-                        <div class="signal-card-header">
-                            <span class="signal-pair">ETH/USDT</span>
-                            <span class="signal-dir dir-sell">SELL</span>
-                        </div>
-                        <div class="signal-card-body">
-                            <span>Strategiya:</span><span>Wyckoff Dist.</span>
-                            <span>Kirish:</span><span style="color:var(--accent-red)">2,280</span>
-                            <span>SL:</span><span style="color:var(--accent-red)">2,340</span>
-                            <span>TP:</span><span style="color:var(--accent-green)">2,100</span>
-                        </div>
-                    </div>
+                <div class="chat-input-wrapper">
+                    <input type="text" class="chat-input" id="chatInput" placeholder="Xabaringiz...">
+                    <button class="btn-send" id="btnSendChat">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
                 </div>
             </div>
+        </div>
 
-            <!-- ---- TAB: KNOWLEDGE ---- -->
-            <div class="tab-content" id="tabKnowledge">
+        <!-- ===================== 4. KNOWLEDGE VIEW ===================== -->
+        <div class="view-section" id="viewKnowledge">
+            <div class="section-title" style="margin-left: 4px; margin-top: 4px; font-size: 1.2rem;">📚 Kitoblar</div>
+            <div class="list-card">
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px;">
+                    Tahlil jarayonida qo'llaniladigan barcha DFX strategiyalari. O'rganish uchun ustiga bosing (Chatga
+                    o'tadi).
+                </div>
+
                 <div class="knowledge-list">
-                    <div style="font-size:0.72rem; color:var(--text-secondary); padding:4px 4px 8px;">📚 Yuklangan
-                        kitoblardan bilimlar — bosing!</div>
                     <div class="knowledge-card">
                         <div class="knowledge-card-title">📘 SMC – Smart Money Concepts</div>
-                        <div class="knowledge-card-desc">Order Block, FVG, Likvidlik, BOS, CHOCH. @demond_fx
-                            strategiyasi.</div>
+                        <div class="knowledge-card-desc">Order Block, FVG, Likvidlik, BOS, CHOCH.</div>
                     </div>
                     <div class="knowledge-card">
                         <div class="knowledge-card-title">📙 Wyckoff Metodi</div>
-                        <div class="knowledge-card-desc">Akkumulyatsiya, Distribyusiya, Spring, Upthrust, VSA tahlili.
-                        </div>
+                        <div class="knowledge-card-desc">Akkumulyatsiya, Distribyusiya, Spring, Upthrust.</div>
                     </div>
                     <div class="knowledge-card">
                         <div class="knowledge-card-title">📗 Elliott Wave Tahlili</div>
-                        <div class="knowledge-card-desc">5-to'lqinli impuls, 3-to'lqinli korreksiya. To'lqin qoidalari.
-                        </div>
+                        <div class="knowledge-card-desc">5-to'lqinli impuls, 3-to'lqinli korreksiya.</div>
                     </div>
                     <div class="knowledge-card">
                         <div class="knowledge-card-title">📕 MO3 – DFX Strategiyasi</div>
-                        <div class="knowledge-card-desc">Manipulyatsiya, Optimallashtirish, Kengayish. Kill Zone
-                            vaqtlari.</div>
-                    </div>
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-title">📒 Fibonacci Darajalari</div>
-                        <div class="knowledge-card-desc">Golden Pocket (0.618-0.705), OTE, to'g'ri foydalanish usullari.
-                        </div>
+                        <div class="knowledge-card-desc">Manipulyatsiya, Optimallashtirish, Kengayish.</div>
                     </div>
                     <div class="knowledge-card">
                         <div class="knowledge-card-title">📓 CHOCH va BOS</div>
-                        <div class="knowledge-card-desc">Tuzilisharni aniqlash, CHOCH orqali kirish nuqtasi topish.
-                        </div>
+                        <div class="knowledge-card-desc">Tuzilisharni aniqlash, CHOCH orqali kirish.</div>
                     </div>
                     <div class="knowledge-card">
                         <div class="knowledge-card-title">📔 Quasimodo (QM) Pattern</div>
@@ -269,30 +174,38 @@
                         <div class="knowledge-card-title">🏦 Bank Manipulyatsiyasi</div>
                         <div class="knowledge-card-desc">Shamlar naqshlari: Hammer, Engulfing, Doji, Marubozu.</div>
                     </div>
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-title">📊 SNR – @demond_fx</div>
-                        <div class="knowledge-card-desc">Kuchli S/R darajalari, flip zonalar, psixologik darajalar.
-                        </div>
-                    </div>
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-title">🏗️ Bozor Strukturasi</div>
-                        <div class="knowledge-card-desc">HH/HL (bullish), LH/LL (bearish), Range. Struktura o'qish.
-                        </div>
-                    </div>
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-title">⚖️ Risk Menejment</div>
-                        <div class="knowledge-card-desc">Risik 1-2%, RRR 1:2+, SL joylash, Trailing stop usullari.</div>
-                    </div>
                 </div>
             </div>
+        </div>
 
-        </div><!-- end right-panel -->
-    </div><!-- end main-layout -->
+    </div>
+
+    <!-- ===================== BOTTOM NAVIGATION ===================== -->
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active" data-view="viewHome">
+            <div class="nav-icon">📊</div>
+            <div class="nav-text">Bo'zor</div>
+        </a>
+        <a href="#" class="nav-item" data-view="viewAnalysis">
+            <div class="nav-icon">🤖</div>
+            <div class="nav-text">Tahlil</div>
+        </a>
+        <a href="#" class="nav-item" data-view="viewChat">
+            <div class="nav-icon">💬</div>
+            <div class="nav-text">Chat</div>
+        </a>
+        <a href="#" class="nav-item" data-view="viewKnowledge">
+            <div class="nav-icon">📚</div>
+            <div class="nav-text">Kitoblar</div>
+        </a>
+    </nav>
 
     <!-- TOAST -->
     <div class="toast" id="toast"></div>
 
+    <!-- App Script -->
     <script src="app.js"></script>
+
 </body>
 
 </html>
