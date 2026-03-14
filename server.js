@@ -105,35 +105,25 @@ TAHLIL QILISH UCHUN:
 - Vaqt oralig'i: ${timeframe || 'Noma\'lum'}
 - Qo'shimcha: ${additionalContext || 'Yo\'q'}
 
-VAZIFANGIZ: Bu MetaTrader bozor skrinshotini to'liq professional tahlil qiling.
+VAZIFANGIZ: Bu MetaTrader bozor skrinshotini (yoki boshqa chartni) FAQAT GINA YUKLANGAN KITOBLARDAGI strategiyalarga (SMC, Wyckoff, Elliott Wave, MO3 va boshqalar) tayanib juda chuqur va mukammal tahlil qiling. Agar siz o'qigan kitoblaringizda ayni shunday bozor holati tasvirlangan bo'lsa, qaysi kitobda ekanligini aytib o'ting. O'zbek tilida professional treyderdek maslahat bering.
+
+Quyidagi tuzilmaga qat'iy rioya qiling:
 
 ## 📊 BOZOR STRUKTURASI
-[Trend yo'nalishi. Muhim HH, HL yoki LH, LL nuqtalar]
+[Joriy trend haqida batafsil ma'lumot. Oliy va quyi nuqtalar (HH, HL, LH, LL) qanday shakllanmoqda? Bozor qayerga ketyapti?]
 
-## 🕯️ SHAMLAR TAHLILI
-[Ko'rinayotgan shamlar naqshlari, eng muhim so'nggi shamlar]
+## 🕯️ SHAMLAR VA ZONALAR TAHLILI
+[Ko'rinayotgan shamlar naqshlari. Kitoblardagi qaysi pattern yuzaga kelgan? Order Blocklar, FVGlar (Boshliqlar), yoki Kuchli Likvidlik zonalari (Support/Resistance) qayerda joylashgan?]
 
-## 🏦 SMC TAHLILI
-[Order Blocklar, FVGlar, Likvidlik zonalari]
+## 🎯 KESKIN SIGNAL VA TAVSIYA
+Signal: 🟢 SOTIB OL (BUY) / 🔴 SOT (SELL) / 🟡 KUTISH (WAIT)
+[Aynan nima qilish kerakligini keskin va aniq ayting.]
+Kirish (Entry) zonasi: [Taxminiy narx yoki zona]
+Zararni cheklash (Stop-Loss/SL): [Qayerga qo'yish kerak va nima uchun?]
+Foyda olish (Take-Profit/TP): [Qaysi likvidlik zongacha ushlash kerak?]
 
-## 📍 MUHIM ZONALAR
-[Qo'llab-quvvatlash: ... | Qarshilik: ...]
-
-## 🎯 SIGNAL
-Signal: 🟢 SOTIB OL / 🔴 SOT / 🟡 KUTISH
-Kirish: [narx]
-To'xtatish (SL): [narx]
-Maqsad 1 (TP1): [narx]
-Maqsad 2 (TP2): [narx]
-Risk/Reward: [1:X]
-Strategiya: [SMC/Wyckoff/MO3/Elliott va h.k.]
-
-## ⚠️ XAVF VA ISHONCH
-Ishonch darajasi: [Yuqori/O'rta/Past] - XX%
-[Sabab]
-
-## 💡 XULOSA
-[2-3 gapda qisqa xulosa va tavsiya]`;
+## 💡 TREYDERGA MASLAHAT
+[Bu vaziyatda siz integratsiya qilgan kitoblar nimani o'rgatadi? Treyder o'zini qanday tutishi kerak? Psixologik va risk-menejment bo'yicha qisqa, tushunarli va kuchli maslahat bering.]`;
 
     try {
         const result = await model.generateContent([
