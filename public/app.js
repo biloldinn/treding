@@ -35,8 +35,7 @@ let animFrame = null;
 let uploadedImageBase64 = null;
 
 // -------- DOM Refs --------
-const canvas = document.getElementById('candleChart');
-const ctx = canvas.getContext('2d');
+const tvContainer = document.getElementById('tvChartContainer');
 const currentPriceEl = document.getElementById('currentPrice');
 const priceChangeEl = document.getElementById('priceChange');
 const statOpen = document.getElementById('statOpen');
@@ -53,16 +52,49 @@ const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
 
 // ===========================
-// CANVAS RESIZE
+// TRADINGVIEW CHART INIT
 // ===========================
-function resizeCanvas() {
-    const wrapper = canvas.parentElement;
-    canvas.width = wrapper.clientWidth;
-    canvas.height = wrapper.clientHeight;
-    drawChart();
-}
+let chart, candleSeries;
 
-window.addEventListener('resize', resizeCanvas);
+function initChart() {
+    if (!tvContainer) return;
+    chart = LightweightCharts.createChart(tvContainer, {
+        width: tvContainer.clientWidth,
+        height: tvContainer.clientHeight,
+        layout: {
+            background: { type: 'solid', color: '#0a0e1a' },
+            textColor: '#8892a4',
+        },
+        grid: {
+            vertLines: { color: 'rgba(255,255,255,0.04)' },
+            horzLines: { color: 'rgba(255,255,255,0.04)' },
+        },
+        crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal,
+        },
+        rightPriceScale: {
+            borderColor: 'rgba(255,255,255,0.1)',
+        },
+        timeScale: {
+            borderColor: 'rgba(255,255,255,0.1)',
+            timeVisible: true,
+            secondsVisible: false,
+        },
+    });
+
+    candleSeries = chart.addCandlestickSeries({
+        upColor: '#00d4aa',
+        downColor: '#ff4757',
+        borderDownColor: '#ff4757',
+        borderUpColor: '#00d4aa',
+        wickDownColor: '#ff4757',
+        wickUpColor: '#00d4aa',
+    });
+
+    window.addEventListener('resize', () => {
+        chart.resize(tvContainer.clientWidth, tvContainer.clientHeight);
+    });
+}
 
 // ===========================
 // FETCH MARKET DATA
@@ -89,7 +121,16 @@ async function fetchCandles() {
             currentPrice = last.close;
             priceChange = ((last.close - first.open) / first.open * 100);
             updateStats();
-            drawChart();
+
+            // Format for TradingView (time must be in seconds)
+            const tvData = candles.map(c => ({
+                time: c.time / 1000,
+                open: c.open,
+                high: c.high,
+                low: c.low,
+                close: c.close
+            }));
+            candleSeries.setData(tvData);
         }
     } catch (e) {
         console.warn('Binance API error, generating demo data');
@@ -152,7 +193,16 @@ function generateDemoCandles() {
     currentPrice = candles[candles.length - 1].close;
     priceChange = ((currentPrice - candles[0].open) / candles[0].open * 100);
     updateStats();
-    drawChart();
+
+    // Format for TradingView
+    const tvData = candles.map(c => ({
+        time: c.time / 1000,
+        open: c.open,
+        high: c.high,
+        low: c.low,
+        close: c.close
+    }));
+    candleSeries.setData(tvData);
 }
 
 // ===========================
@@ -173,186 +223,16 @@ function startLiveTick() {
         currentPriceEl.textContent = formatPrice(currentPrice);
         priceChangeEl.textContent = (priceChange >= 0 ? '+' : '') + priceChange.toFixed(2) + '%';
         priceChangeEl.className = 'price-change ' + (priceChange >= 0 ? 'up' : 'down');
-        drawChart();
+
+        candleSeries.update({
+            time: last.time / 1000,
+            open: last.open,
+            high: last.high,
+            low: last.low,
+            close: last.close
+        });
     }, 500);
     return tickInterval;
-}
-
-// ===========================
-// DRAW CANDLESTICK CHART
-// ===========================
-function drawChart() {
-    if (!canvas || !ctx || !candles.length) return;
-
-    const W = canvas.width;
-    const H = canvas.height;
-
-    ctx.clearRect(0, 0, W, H);
-
-    // Background
-    ctx.fillStyle = '#0a0e1a';
-    ctx.fillRect(0, 0, W, H);
-
-    // Grid
-    drawGrid(W, H);
-
-    // Candlesticks
-    const paddingLeft = 12;
-    const paddingRight = 60;
-    const paddingTop = 20;
-    const paddingBottom = 30;
-
-    const chartW = W - paddingLeft - paddingRight;
-    const chartH = H - paddingTop - paddingBottom;
-
-    const prices = candles.flatMap(c => [c.high, c.low]);
-    const minP = Math.min(...prices);
-    const maxP = Math.max(...prices);
-    const priceRange = maxP - minP || 1;
-
-    const candleW = (chartW / candles.length) * 0.7;
-    const gap = (chartW / candles.length) * 0.3;
-
-    const toY = (p) => paddingTop + chartH - ((p - minP) / priceRange) * chartH;
-    const toX = (i) => paddingLeft + i * (chartW / candles.length) + gap / 2;
-
-    // EMA line
-    drawEMA(candles, toX, toY, paddingTop, chartH, minP, priceRange);
-
-    // Candles
-    candles.forEach((c, i) => {
-        const x = toX(i);
-        const openY = toY(c.open);
-        const closeY = toY(c.close);
-        const highY = toY(c.high);
-        const lowY = toY(c.low);
-        const isBull = c.close >= c.open;
-        const color = isBull ? '#00d4aa' : '#ff4757';
-        const bodyY = Math.min(openY, closeY);
-        const bodyH = Math.max(Math.abs(openY - closeY), 1);
-
-        // Wick
-        ctx.strokeStyle = isBull ? 'rgba(0,212,170,0.7)' : 'rgba(255,71,87,0.7)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(x + candleW / 2, highY);
-        ctx.lineTo(x + candleW / 2, lowY);
-        ctx.stroke();
-
-        // Body
-        ctx.fillStyle = isBull ? 'rgba(0,212,170,0.85)' : 'rgba(255,71,87,0.85)';
-        ctx.fillRect(x, bodyY, candleW, bodyH);
-
-        // Border
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 0.5;
-        ctx.strokeRect(x, bodyY, candleW, bodyH);
-    });
-
-    // Price axis (right)
-    drawPriceAxis(W, paddingTop, paddingRight, chartH, minP, maxP, priceRange);
-
-    // Time axis (bottom)
-    drawTimeAxis(W, H, paddingLeft, paddingBottom, chartW);
-
-    // Current price line
-    drawCurrentPriceLine(W, toY(currentPrice), paddingRight);
-}
-
-function drawGrid(W, H) {
-    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-    ctx.lineWidth = 1;
-    const rows = 6;
-    for (let i = 1; i < rows; i++) {
-        const y = (H / rows) * i;
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(W, y);
-        ctx.stroke();
-    }
-    const cols = 8;
-    for (let i = 1; i < cols; i++) {
-        const x = (W / cols) * i;
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, H);
-        ctx.stroke();
-    }
-}
-
-function drawEMA(candles, toX, toY, paddingTop, chartH, minP, priceRange) {
-    if (candles.length < 20) return;
-    const period = 20;
-    const emas = [];
-    let sum = candles.slice(0, period).reduce((a, c) => a + c.close, 0);
-    emas.push({ i: period - 1, val: sum / period });
-    const k = 2 / (period + 1);
-    for (let i = period; i < candles.length; i++) {
-        const ema = candles[i].close * k + emas[emas.length - 1].val * (1 - k);
-        emas.push({ i, val: ema });
-    }
-
-    ctx.strokeStyle = 'rgba(124, 77, 255, 0.6)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    emas.forEach((e, idx) => {
-        const x = toX(e.i) + (candles[e.i].high - candles[e.i].low) * 0.35;
-        const y = toY(e.val);
-        if (idx === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-}
-
-function drawPriceAxis(W, paddingTop, paddingRight, chartH, minP, maxP, priceRange) {
-    const steps = 6;
-    ctx.fillStyle = 'rgba(136, 146, 164, 0.8)';
-    ctx.font = '10px monospace';
-    ctx.textAlign = 'left';
-    for (let i = 0; i <= steps; i++) {
-        const price = minP + (priceRange / steps) * i;
-        const y = paddingTop + chartH - (chartH / steps) * i;
-        ctx.fillText(formatPrice(price), W - paddingRight + 4, y + 3);
-    }
-}
-
-function drawTimeAxis(W, H, paddingLeft, paddingBottom, chartW) {
-    if (!candles.length) return;
-    const steps = 5;
-    const step = Math.floor(candles.length / steps);
-    ctx.fillStyle = 'rgba(136, 146, 164, 0.6)';
-    ctx.font = '9px monospace';
-    ctx.textAlign = 'center';
-    for (let i = 0; i <= steps; i++) {
-        const idx = Math.min(i * step, candles.length - 1);
-        const c = candles[idx];
-        const x = paddingLeft + (chartW / candles.length) * idx;
-        const d = new Date(c.time);
-        const label = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
-        ctx.fillText(label, x, H - paddingBottom / 2 + 8);
-    }
-}
-
-function drawCurrentPriceLine(W, y, paddingRight) {
-    ctx.setLineDash([4, 4]);
-    ctx.strokeStyle = priceChange >= 0 ? 'rgba(0,212,170,0.5)' : 'rgba(255,71,87,0.5)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(W - paddingRight, y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Price tag
-    const color = priceChange >= 0 ? '#00d4aa' : '#ff4757';
-    ctx.fillStyle = color;
-    const tag = formatPrice(currentPrice);
-    ctx.font = 'bold 10px monospace';
-    ctx.textAlign = 'left';
-    const tagW = ctx.measureText(tag).width + 8;
-    ctx.fillRect(W - paddingRight + 2, y - 8, tagW, 16);
-    ctx.fillStyle = '#000';
-    ctx.fillText(tag, W - paddingRight + 6, y + 4);
 }
 
 // ===========================
@@ -371,8 +251,10 @@ document.querySelectorAll('.nav-item').forEach(btn => {
         document.getElementById(btn.dataset.view).classList.add('active');
 
         // Redraw chart if switching back to home
-        if (btn.dataset.view === 'viewHome') {
-            setTimeout(resizeCanvas, 50);
+        if (btn.dataset.view === 'viewHome' && chart) {
+            setTimeout(() => {
+                chart.resize(tvContainer.clientWidth, tvContainer.clientHeight);
+            }, 50);
         }
     });
 });
@@ -552,8 +434,60 @@ function updateSignalsPanel(analysisText, pair) {
 }
 
 // ===========================
-// AI CHAT
+// AI CHAT & VOICE
 // ===========================
+
+// Voice Recognition Init
+const btnMic = document.getElementById('btnMicChat');
+let recognition;
+let isRecording = false;
+
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'uz-UZ';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        chatInput.value = transcript;
+        showToast('🎙 Gap matnga aylantirildi!');
+    };
+
+    recognition.onerror = (e) => {
+        showToast('🎙 Xato: ' + e.error);
+        stopRecording();
+    };
+
+    recognition.onend = () => {
+        stopRecording();
+    };
+
+    btnMic.addEventListener('click', () => {
+        if (isRecording) stopRecording();
+        else startRecording();
+    });
+} else {
+    if (btnMic) btnMic.style.display = 'none'; // yashiramiz agar brauzer qo'llab-quvvatlamasa
+}
+
+function startRecording() {
+    if (!recognition) return;
+    if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+    recognition.start();
+    isRecording = true;
+    btnMic.style.color = '#ff4757';
+    btnMic.style.animation = 'pulse 1.5s infinite';
+}
+
+function stopRecording() {
+    if (!recognition) return;
+    isRecording = false;
+    btnMic.style.color = 'var(--accent-gold)';
+    btnMic.style.animation = 'none';
+}
+
 chatInput.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -626,7 +560,7 @@ function showToast(msg) {
 // INIT
 // ===========================
 async function init() {
-    resizeCanvas();
+    initChart();
     generateDemoCandles(); // Show immediately
     startLiveTick();
     await fetchCandles();  // Then fetch real

@@ -7,6 +7,8 @@
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>TuronAI Trading</title>
     <meta name="description" content="AI bilan professional bozor tahlili. SMC, Wyckoff, Elliott Wave.">
+    <!-- TradingView Lightweight Charts -->
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -58,8 +60,8 @@
                         <button class="tf-btn" data-tf="1d">1D</button>
                     </div>
                 </div>
-                <div class="chart-wrapper">
-                    <canvas id="candleChart"></canvas>
+                <div class="chart-wrapper" id="tvChartContainer">
+                    <!-- TradingView Chart goes here -->
                 </div>
             </div>
 
@@ -120,6 +122,15 @@
                     </div>
                 </div>
                 <div class="chat-input-wrapper">
+                    <button class="btn-send" id="btnMicChat"
+                        style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--accent-gold);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="22"></line>
+                        </svg>
+                    </button>
                     <input type="text" class="chat-input" id="chatInput" placeholder="Xabaringiz...">
                     <button class="btn-send" id="btnSendChat">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -131,52 +142,53 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- ===================== 4. KNOWLEDGE VIEW ===================== -->
-        <div class="view-section" id="viewKnowledge">
-            <div class="section-title" style="margin-left: 4px; margin-top: 4px; font-size: 1.2rem;">📚 Kitoblar</div>
-            <div class="list-card">
-                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px;">
-                    Tahlil jarayonida qo'llaniladigan barcha DFX strategiyalari. O'rganish uchun ustiga bosing (Chatga
-                    o'tadi).
+    <!-- ===================== 4. KNOWLEDGE VIEW ===================== -->
+    <div class="view-section" id="viewKnowledge">
+        <div class="section-title" style="margin-left: 4px; margin-top: 4px; font-size: 1.2rem;">📚 Kitoblar</div>
+        <div class="list-card">
+            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px;">
+                Tahlil jarayonida qo'llaniladigan barcha DFX strategiyalari. O'rganish uchun ustiga bosing (Chatga
+                o'tadi).
+            </div>
+
+            <div class="knowledge-list">
+                <div class="knowledge-card">
+                    <div class="knowledge-card-title">📘 SMC – Smart Money Concepts</div>
+                    <div class="knowledge-card-desc">Order Block, FVG, Likvidlik, BOS, CHOCH.</div>
                 </div>
-
-                <div class="knowledge-list">
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-title">📘 SMC – Smart Money Concepts</div>
-                        <div class="knowledge-card-desc">Order Block, FVG, Likvidlik, BOS, CHOCH.</div>
-                    </div>
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-title">📙 Wyckoff Metodi</div>
-                        <div class="knowledge-card-desc">Akkumulyatsiya, Distribyusiya, Spring, Upthrust.</div>
-                    </div>
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-title">📗 Elliott Wave Tahlili</div>
-                        <div class="knowledge-card-desc">5-to'lqinli impuls, 3-to'lqinli korreksiya.</div>
-                    </div>
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-title">📕 MO3 – DFX Strategiyasi</div>
-                        <div class="knowledge-card-desc">Manipulyatsiya, Optimallashtirish, Kengayish.</div>
-                    </div>
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-title">📓 CHOCH va BOS</div>
-                        <div class="knowledge-card-desc">Tuzilisharni aniqlash, CHOCH orqali kirish.</div>
-                    </div>
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-title">📔 Quasimodo (QM) Pattern</div>
-                        <div class="knowledge-card-desc">Ilg'or burilish naqshi. Chap-O'ng elkalar tahlili.</div>
-                    </div>
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-title">📋 SND – Talab va Taklif</div>
-                        <div class="knowledge-card-desc">Yangi zonalar, zona kuchi tahlili, kirish nuqtalari.</div>
-                    </div>
-                    <div class="knowledge-card">
-                        <div class="knowledge-card-title">🏦 Bank Manipulyatsiyasi</div>
-                        <div class="knowledge-card-desc">Shamlar naqshlari: Hammer, Engulfing, Doji, Marubozu.</div>
-                    </div>
+                <div class="knowledge-card">
+                    <div class="knowledge-card-title">📙 Wyckoff Metodi</div>
+                    <div class="knowledge-card-desc">Akkumulyatsiya, Distribyusiya, Spring, Upthrust.</div>
+                </div>
+                <div class="knowledge-card">
+                    <div class="knowledge-card-title">📗 Elliott Wave Tahlili</div>
+                    <div class="knowledge-card-desc">5-to'lqinli impuls, 3-to'lqinli korreksiya.</div>
+                </div>
+                <div class="knowledge-card">
+                    <div class="knowledge-card-title">📕 MO3 – DFX Strategiyasi</div>
+                    <div class="knowledge-card-desc">Manipulyatsiya, Optimallashtirish, Kengayish.</div>
+                </div>
+                <div class="knowledge-card">
+                    <div class="knowledge-card-title">📓 CHOCH va BOS</div>
+                    <div class="knowledge-card-desc">Tuzilisharni aniqlash, CHOCH orqali kirish.</div>
+                </div>
+                <div class="knowledge-card">
+                    <div class="knowledge-card-title">📔 Quasimodo (QM) Pattern</div>
+                    <div class="knowledge-card-desc">Ilg'or burilish naqshi. Chap-O'ng elkalar tahlili.</div>
+                </div>
+                <div class="knowledge-card">
+                    <div class="knowledge-card-title">📋 SND – Talab va Taklif</div>
+                    <div class="knowledge-card-desc">Yangi zonalar, zona kuchi tahlili, kirish nuqtalari.</div>
+                </div>
+                <div class="knowledge-card">
+                    <div class="knowledge-card-title">🏦 Bank Manipulyatsiyasi</div>
+                    <div class="knowledge-card-desc">Shamlar naqshlari: Hammer, Engulfing, Doji, Marubozu.</div>
                 </div>
             </div>
         </div>
+    </div>
 
     </div>
 
