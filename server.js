@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 
@@ -13,18 +13,8 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Initialize with default settings - gemini-1.5-flash is stable on v1
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-if (!process.env.GEMINI_API_KEY) {
-    console.error('❌ CRITICAL: GEMINI_API_KEY is not defined in .env');
-} else {
-    console.log('✅ GEMINI_API_KEY loaded from .env');
-}
-
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "arcee-ai/trinity-mini:free";
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "google/gemini-flash-1.5"; // Using Gemini 1.5 Flash as default via OpenRouter
 
 // ===================================================
 // PDF BOOKS LOADER
@@ -137,30 +127,8 @@ Foyda olish (TP): [Maqsad zonasi]
 [Bu vaziyatda integratsiya qilingan kitoblar nimani uqtiradi? Risk va psixologiya bo'yicha qisqa tavsiya.]`;
 
     try {
-        const result = await model.generateContent([
-            {
-                inlineData: {
-                    data: base64Data,
-                    mimeType: mimeType
-                }
-            },
-            { text: prompt }
-        ]);
-        res.json({ success: true, analysis: result.response.text(), booksUsed: loadedBooks });
-    } catch (error) {
-        console.error('AI tahlil xatosi:', error);
-        res.status(500).json({ success: false, error: 'AI tahlilida xatolik: ' + error.message });
-    }
-});
+        const systemPrompt = buildSystemPrompt();
 
-// ===================================================
-// API: CHAT
-// ===================================================
-app.post('/api/chat', async (req, res) => {
-    const { message } = req.body;
-    const systemPrompt = buildSystemPrompt();
-
-    try {
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -170,31 +138,72 @@ app.post('/api/chat', async (req, res) => {
                 "X-Title": "Turon AI Trading"
             },
             body: JSON.stringify({
-                model: OPENROUTER_MODEL,
+                model: "google/gemini-flash-1.5", // Using Gemini 1.5 Flash via OpenRouter
                 messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: `FOYDALANUVCHI SAVOLI: "${message}"\n\nO'zbek tilida qisqa, professional va aniq javob bering. Kitoblardagi kontseptsiyalardan foydalaning.` }
+                    {
+                        role: "user",
+                        content: [
+                            {
+                                type: "text",
+                                text: prompt
+                            },
+                            {
+                                type: "image_url",
+                                image_url: {
+                                    url: imageBase64 // OpenRouter supports data URLs
+                                }
+                            }
+                        ]
+                    }
                 ]
             })
         });
 
         const data = await response.json();
-        if (data && data.choices && data.choices.length > 0) {
-            res.json({ success: true, response: data.choices[0].message.content });
+
+        if (data.choices && data.choices.length > 0) {
+            res.json({ success: true, analysis: data.choices[0].message.content, booksUsed: loadedBooks });
         } else {
-            // Fallback to Gemini if OpenRouter fails or returns empty format
-            const geminiResult = await model.generateContent(systemPrompt + `\n\nFOYDALANUVCHI SAVOLI: "${message}"\n\nO'zbek tilida qisqa, professional javob bering.`);
-            res.json({ success: true, response: geminiResult.response.text() });
+            console.error('OpenRouter Analysis Error:', data);
+            throw new Error(data.error?.message || 'OpenRouter tahlil qaytarmadi');
         }
     } catch (error) {
-        try {
-            // Second fallback to Gemini on catch error
-            const geminiResult = await model.generateContent(systemPrompt + `\n\nFOYDALANUVCHI SAVOLI: "${message}"\n\nO'zbek tilida qisqa, professional javob bering.`);
-            res.json({ success: true, response: geminiResult.response.text() });
-        } catch (fallbackError) {
-            res.status(500).json({ success: false, error: 'Chat xatosi: har ikkala API ham band.' });
-        }
+        console.error('AI tahlil xatosi:', error);
+        res.status(500).json({ success: false, error: 'AI tahlilida xatolik: ' + error.message });
     }
+});
+
+// ===================================================
+// API: CHAT
+// ===================================================
+try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://github.com/biloldinn/treding",
+            "X-Title": "Turon AI Trading"
+        },
+        body: JSON.stringify({
+            model: OPENROUTER_MODEL,
+            messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: `FOYDALANUVCHI SAVOLI: "${message}"\n\nO'zbek tilida qisqa, professional va aniq javob bering. Kitoblardagi kontseptsiyalardan foydalaning.` }
+            ]
+        })
+    });
+
+    const data = await response.json();
+    if (data && data.choices && data.choices.length > 0) {
+        res.json({ success: true, response: data.choices[0].message.content });
+    } else {
+        throw new Error(data.error?.message || 'OpenRouter javob bermadi');
+    }
+} catch (error) {
+    console.error('Chat xatosi:', error);
+    res.status(500).json({ success: false, error: 'Chat xatosi: ' + error.message });
+}
 });
 
 // ===================================================
