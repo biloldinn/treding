@@ -13,10 +13,10 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Initialize with v1beta to ensure gemini-1.5-flash availability if v1 is restricted
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-// Use gemini-1.5-flash for both as it supports vision and text
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-const visionModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: 'v1beta' });
+const visionModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: 'v1beta' });
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "arcee-ai/trinity-mini:free";
@@ -133,8 +133,13 @@ Foyda olish (TP): [Maqsad zonasi]
 
     try {
         const result = await model.generateContent([
-            { inlineData: { data: base64Data, mimeType } },
-            prompt
+            {
+                inlineData: {
+                    data: base64Data,
+                    mimeType: mimeType
+                }
+            },
+            { text: prompt }
         ]);
         res.json({ success: true, analysis: result.response.text(), booksUsed: loadedBooks });
     } catch (error) {
