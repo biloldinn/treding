@@ -13,6 +13,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AIzaSyDn2SUrDcDUjyUKd8OQqlyf6Tzb663FcU0');
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const visionModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); // Vision support
 
 const OPENROUTER_API_KEY = "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";
 const OPENROUTER_MODEL = "arcee-ai/trinity-mini:free";
@@ -101,29 +102,31 @@ app.post('/api/analyze', async (req, res) => {
     const prompt = `${buildSystemPrompt()}
 
 TAHLIL QILISH UCHUN:
-- Juftlik: ${pair || 'Noma\'lum'}
-- Vaqt oralig'i: ${timeframe || 'Noma\'lum'}
+- Juftlik: ${pair || 'XAU/USD'}
+- Vaqt oralig'i: ${timeframe || 'M5'}
 - Qo'shimcha: ${additionalContext || 'Yo\'q'}
 
-VAZIFANGIZ: Bu MetaTrader bozor skrinshotini (yoki boshqa chartni) FAQAT GINA YUKLANGAN KITOBLARDAGI strategiyalarga (SMC, Wyckoff, Elliott Wave, MO3 va boshqalar) tayanib juda chuqur va mukammal tahlil qiling. Agar siz o'qigan kitoblaringizda ayni shunday bozor holati tasvirlangan bo'lsa, qaysi kitobda ekanligini aytib o'ting. O'zbek tilida professional treyderdek maslahat bering.
+VAZIFANGIZ: Bu savdo terminali (MT4/MT5) skrinshotidir. Uni FAQAT GINA YUKLANGAN KITOBLARDAGI professional strategiyalarga (SMC, Wyckoff, Elliott Wave, MO3, SND va boshqalar) tayanib juda chuqur tahlil qiling. 
 
-Quyidagi tuzilmaga qat'iy rioya qiling:
+DIQQAT: Sizning tahlilingiz va beradigan BUY/SELL/WAIT signalingiz faqat yuklangan kitoblarda yozilgan texnik qoidalar (Order Block, FVG, BOS, CHoCH, Liquidity sweep va h.k.) asosida bo'lishi SHART. Agar rasmda kitoblardagi biror aniq pattern (masalan, Quasimodo yoki Spring) bo'lsa, uni nomi bilan ayting.
+
+O'zbek tilida professional treyderdek javob bering. Quyidagi tuzilmaga qat'iy rioya qiling:
 
 ## 📊 BOZOR STRUKTURASI
-[Joriy trend haqida batafsil ma'lumot. Oliy va quyi nuqtalar (HH, HL, LH, LL) qanday shakllanmoqda? Bozor qayerga ketyapti?]
+[Joriy trend haqida batafsil ma'lumot. Kitoblar bo'yicha HH, HL, LH, LL qanday shakllanmoqda? Trend o'zgarishi bormi?]
 
 ## 🕯️ SHAMLAR VA ZONALAR TAHLILI
-[Ko'rinayotgan shamlar naqshlari. Kitoblardagi qaysi pattern yuzaga kelgan? Order Blocklar, FVGlar (Boshliqlar), yoki Kuchli Likvidlik zonalari (Support/Resistance) qayerda joylashgan?]
+[Ko'rinayotgan shamlar naqshlari. Kitoblardagi qaysi pattern (Engulfing, Doji va h.k.) bor? Order Blocklar va FVG zonalari qayerda?]
 
 ## 🎯 KESKIN SIGNAL VA TAVSIYA
 Signal: 🟢 SOTIB OL (BUY) / 🔴 SOT (SELL) / 🟡 KUTISH (WAIT)
-[Aynan nima qilish kerakligini keskin va aniq ayting.]
-Kirish (Entry) zonasi: [Taxminiy narx yoki zona]
-Zararni cheklash (Stop-Loss/SL): [Qayerga qo'yish kerak va nima uchun?]
-Foyda olish (Take-Profit/TP): [Qaysi likvidlik zongacha ushlash kerak?]
+[Kitoblar bilimiga asoslangan keskin va aniq xulosa.]
+Kirish (Entry) zonasi: [Aniq narx yoki zona]
+Zararni cheklash (SL): [Qayerga va nega?]
+Foyda olish (TP): [Maqsad zonasi]
 
-## 💡 TREYDERGA MASLAHAT
-[Bu vaziyatda siz integratsiya qilgan kitoblar nimani o'rgatadi? Treyder o'zini qanday tutishi kerak? Psixologik va risk-menejment bo'yicha qisqa, tushunarli va kuchli maslahat bering.]`;
+## 💡 MT5/PROFESSIONAL MASLAHAT
+[Bu vaziyatda integratsiya qilingan kitoblar nimani uqtiradi? Risk va psixologiya bo'yicha qisqa tavsiya.]`;
 
     try {
         const result = await model.generateContent([

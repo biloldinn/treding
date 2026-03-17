@@ -26,7 +26,7 @@ async function fetchBooksStatus() {
 }
 
 // -------- State --------
-let currentSymbol = 'BTCUSDT';
+let currentSymbol = 'XAUUSD';
 let currentInterval = '1h';
 let candles = [];
 let currentPrice = 0;
@@ -83,12 +83,11 @@ function initChart() {
     });
 
     candleSeries = chart.addCandlestickSeries({
-        upColor: '#00d4aa',
-        downColor: '#ff4757',
-        borderDownColor: '#ff4757',
-        borderUpColor: '#00d4aa',
-        wickDownColor: '#ff4757',
-        wickUpColor: '#00d4aa',
+        upColor: '#26a69a',
+        downColor: '#ef5350',
+        borderVisible: false,
+        wickUpColor: '#26a69a',
+        wickDownColor: '#ef5350',
     });
 
     window.addEventListener('resize', () => {
@@ -156,6 +155,7 @@ function updateStats() {
 }
 
 function formatPrice(p) {
+    if (currentSymbol.includes('XAU')) return p.toFixed(2);
     if (p > 1000) return p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     if (p > 1) return p.toFixed(4);
     return p.toFixed(6);
